@@ -32,10 +32,16 @@
 extern "C" {
 #endif
 
+/**
+ * 没有禁止用户使用自己的内存分配函数，就给用户提供接口 
+ **/
 #ifndef _EVENT_DISABLE_MM_REPLACEMENT
 /* Internal use only: Memory allocation functions. We give them nice short
  * mm_names for our own use, but make sure that the symbols have longer names
  * so they don't conflict with other libraries (like, say, libmm). */
+/**
+ * 实际的实现代码在event.c中
+ **/
 void *event_mm_malloc_(size_t sz);
 void *event_mm_calloc_(size_t count, size_t size);
 char *event_mm_strdup_(const char *s);
@@ -46,6 +52,9 @@ void event_mm_free_(void *p);
 #define mm_strdup(s) event_mm_strdup_(s)
 #define mm_realloc(p, sz) event_mm_realloc_((p), (sz))
 #define mm_free(p) event_mm_free_(p)
+/**
+ * 否则，就是禁止用户使用自己的内存分配函数，就用系统调用
+ **/ 
 #else
 #define mm_malloc(sz) malloc(sz)
 #define mm_calloc(n, sz) calloc((n), (sz))
