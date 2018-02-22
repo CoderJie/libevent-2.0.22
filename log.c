@@ -172,6 +172,12 @@ _event_debugx(const char *fmt, ...)
 	va_end(ap);
 }
 
+/**
+ * severity：日志的级别。libevent支持4个级别的日志：EVENT_LOG_DEBUG、EVENT_LOG_MSG、EVENT_LOG_WARN和EVENT_LOG_ERR。
+ * errstr：附带的错误消息。
+ * fmt：类似于printf中的格式化输出格式。
+ * ap：可变参数。
+ **/ 
 static void
 _warn_helper(int severity, const char *errstr, const char *fmt, va_list ap)
 {
