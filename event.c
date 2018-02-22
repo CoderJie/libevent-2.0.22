@@ -559,6 +559,10 @@ event_base_new_with_config(const struct event_config *cfg)
 	event_debug_mode_too_late = 1;
 #endif
 
+    /**
+     * 之所以不用mm_malloc是因为mm_malloc并不会清零该内存区域
+     * 而这个函数是会清零申请到的内存区域。这相当于给base初始化
+     **/ 
 	if ((base = mm_calloc(1, sizeof(struct event_base))) == NULL) {
 		event_warn("%s: calloc", __func__);
 		return NULL;
@@ -632,6 +636,10 @@ event_base_new_with_config(const struct event_config *cfg)
 	if (EVTHREAD_LOCKING_ENABLED() &&
 	    (!cfg || !(cfg->flags & EVENT_BASE_FLAG_NOLOCK))) {
 		int r;
+
+        /**
+         * 申请锁变量
+         **/ 
 		EVTHREAD_ALLOC_LOCK(base->th_base_lock,
 		    EVTHREAD_LOCKTYPE_RECURSIVE);
 		base->defer_queue.lock = base->th_base_lock;

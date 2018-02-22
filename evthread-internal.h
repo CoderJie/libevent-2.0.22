@@ -36,6 +36,11 @@ extern "C" {
 
 struct event_base;
 
+/**
+ * 对锁和条件变量的各种封装，主要封装的是evthread.c
+ * 而对于linux平台，evthread.c又是对evthread_pthread.c的一层封装
+ **/ 
+
 #ifndef WIN32
 /* On Windows, the way we currently make DLLs, it's not allowed for us to
  * have shared global structures.  Thus, we only do the direct-call-to-function

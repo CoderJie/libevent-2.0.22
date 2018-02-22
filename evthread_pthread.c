@@ -37,6 +37,10 @@ struct event_base;
 #include "mm-internal.h"
 #include "evthread-internal.h"
 
+/**
+ * 对linux平台下的线程相关系统调用做了简单的封装
+ **/ 
+
 static pthread_mutexattr_t attr_recursive;
 
 static void *
@@ -46,6 +50,9 @@ evthread_posix_lock_alloc(unsigned locktype)
 	pthread_mutex_t *lock = mm_malloc(sizeof(pthread_mutex_t));
 	if (!lock)
 		return NULL;
+    /**
+     * Libevent提供的pthreads版本锁只支持递归锁和普通非递归锁，并不支持读写锁。
+     **/
 	if (locktype & EVTHREAD_LOCKTYPE_RECURSIVE)
 		attr = &attr_recursive;
 	if (pthread_mutex_init(lock, attr)) {
@@ -67,6 +74,9 @@ static int
 evthread_posix_lock(unsigned mode, void *_lock)
 {
 	pthread_mutex_t *lock = _lock;
+    /**
+     * 仅仅支持EVTHREAD_TRY这个锁模式，而不支持读写锁模式，EVTHREAD_WRITE和EVTHREAD_READ
+     **/ 
 	if (mode & EVTHREAD_TRY)
 		return pthread_mutex_trylock(lock);
 	else
@@ -182,8 +192,21 @@ evthread_use_pthreads(void)
 	if (pthread_mutexattr_settype(&attr_recursive, PTHREAD_MUTEX_RECURSIVE))
 		return -1;
 
+    /* 下面这些定制函数的实现都在evthread.c中，该文件是一个统一对外的接口，隐藏了不同平台的差异 */
+    /**
+     * 定制锁操作
+     **/ 
 	evthread_set_lock_callbacks(&cbs);
+
+    /**
+     * 定制条件变量操作
+     **/ 
 	evthread_set_condition_callbacks(&cond_cbs);
+
+    /**
+     * 设置获取线程ID的回调函数
+     **/ 
 	evthread_set_id_callback(evthread_posix_get_id);
-	return 0;
+	
+    return 0;
 }

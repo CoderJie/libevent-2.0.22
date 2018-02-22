@@ -102,17 +102,28 @@ struct evthread_lock_callbacks {
 	 * READWRITE locks are not currently used.)
 	 **/
 	unsigned supported_locktypes;
+    /**
+     * 分配一个锁变量(指针类型)，因为不同的平台锁变量是不同的类型，所以用通用的void*类型
+     **/ 
 	/** Function to allocate and initialize new lock of type 'locktype'.
-	 * Returns NULL on failure. */
+	 *  Returns NULL on failure. 
+     *  用于分配和构造类型为supported_locktypes的锁
+     **/
 	void *(*alloc)(unsigned locktype);
 	/** Funtion to release all storage held in 'lock', which was created
-	 * with type 'locktype'. */
+	 *  with type 'locktype'. 
+     *  用于释放类型为supported_locktypes的锁
+     **/
 	void (*free)(void *lock, unsigned locktype);
 	/** Acquire an already-allocated lock at 'lock' with mode 'mode'.
-	 * Returns 0 on success, and nonzero on failure. */
+	 *  Returns 0 on success, and nonzero on failure. 
+     *  加锁，成功返回0，失败返回非0
+     **/
 	int (*lock)(unsigned mode, void *lock);
 	/** Release a lock at 'lock' using mode 'mode'.  Returns 0 on success,
-	 * and nonzero on failure. */
+	 *  and nonzero on failure. 
+     *  解锁，成功返回0，失败返回非0 
+     **/
 	int (*unlock)(unsigned mode, void *lock);
 };
 
@@ -139,29 +150,36 @@ struct evthread_condition_callbacks {
 	 * EVTHREAD_CONDITION_API_VERSION */
 	int condition_api_version;
 	/** Function to allocate and initialize a new condition variable.
-	 * Returns the condition variable on success, and NULL on failure.
-	 * The 'condtype' argument will be 0 with this API version.
+	 *  Returns the condition variable on success, and NULL on failure.
+	 *  The 'condtype' argument will be 0 with this API version.
+     *  用于分配和构造一个条件变量，这个版本的condtype为0
 	 */
 	void *(*alloc_condition)(unsigned condtype);
-	/** Function to free a condition variable. */
+	/** Function to free a condition variable.
+     *  用于释放该条件变量
+     **/
 	void (*free_condition)(void *cond);
 	/** Function to signal a condition variable.  If 'broadcast' is 1, all
-	 * threads waiting on 'cond' should be woken; otherwise, only on one
-	 * thread is worken.  Should return 0 on success, -1 on failure.
-	 * This function will only be called while holding the associated
-	 * lock for the condition.
+	 *  threads waiting on 'cond' should be woken; otherwise, only on one
+	 *  thread is worken.  Should return 0 on success, -1 on failure.
+	 *  This function will only be called while holding the associated
+	 *  lock for the condition.
+     *  唤醒等待线程，如果broadcast为1，则唤醒所有等待线程，否则值唤醒一个等待线程
 	 */
 	int (*signal_condition)(void *cond, int broadcast);
 	/** Function to wait for a condition variable.  The lock 'lock'
-	 * will be held when this function is called; should be released
-	 * while waiting for the condition to be come signalled, and
-	 * should be held again when this function returns.
-	 * If timeout is provided, it is interval of seconds to wait for
-	 * the event to become signalled; if it is NULL, the function
-	 * should wait indefinitely.
+	 *  will be held when this function is called; should be released
+	 *  while waiting for the condition to be come signalled, and
+	 *  should be held again when this function returns.
+	 *  If timeout is provided, it is interval of seconds to wait for
+	 *  the event to become signalled; if it is NULL, the function
+	 *  should wait indefinitely.
 	 *
-	 * The function should return -1 on error; 0 if the condition
-	 * was signalled, or 1 on a timeout. */
+	 *  The function should return -1 on error; 0 if the condition
+	 *  was signalled, or 1 on a timeout. 
+     *
+     *  等待条件变量变为真，如果timeout为NULL则无限等待，否则等待timeout时间，该函数调用将持有锁
+     **/
 	int (*wait_condition)(void *cond, void *lock,
 	    const struct timeval *timeout);
 };
