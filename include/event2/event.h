@@ -582,6 +582,8 @@ void event_base_free(struct event_base *);
   @see event_set_log_callback
  */
 typedef void (*event_log_cb)(int severity, const char *msg);
+
+
 /**
   Redirect Libevent's log messages.
 
@@ -591,6 +593,11 @@ typedef void (*event_log_cb)(int severity, const char *msg);
 
   NOTE: The function you provide *must not* call any other libevent
   functionality.  Doing so can produce undefined behavior.
+
+  Libevent在默认情况下，会将这些日志信息输出到终端上。
+  Libevent允许用户定制自己的日志回调函数。所有的日志函数在最后输出信息时，都会调用日志回调函数的。
+  所以用户可以通过定制自己的日志回调函数（在回调函数中把信息输出到一个文件上），方便日后的查看。
+  不能在你的日志回调函数里面调用任何Libevent提供的API函数，否则将发生未定义行为。
   */
 void event_set_log_callback(event_log_cb cb);
 

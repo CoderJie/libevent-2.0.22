@@ -102,6 +102,12 @@ event_warn(const char *fmt, ...)
 	va_end(ap);
 }
 
+
+/**
+ * 对于linux系统，定义位于include/event2/util.h
+ * 365 #define evutil_socket_geterror(sock) (errno)
+ * 366 #define evutil_socket_error_to_string(errcode) (strerror(errcode))
+ **/ 
 void
 event_sock_err(int eval, evutil_socket_t sock, const char *fmt, ...)
 {
@@ -172,18 +178,30 @@ _warn_helper(int severity, const char *errstr, const char *fmt, va_list ap)
 	char buf[1024];
 	size_t len;
 
+    /**
+     * 如果有可变参数，就把可变参数格式化到一个缓存区buf中
+     **/
 	if (fmt != NULL)
 		evutil_vsnprintf(buf, sizeof(buf), fmt, ap);
 	else
 		buf[0] = '\0';
 
+    /**
+     * 如果有额外的信息描述，把这些信息追加到可变参数的后面
+     **/
 	if (errstr) {
-		len = strlen(buf);
+		len = strlen(buf);i
+        /**
+         * -3是因为还有另外三个字符，冒号、空格和\0
+         **/ 
 		if (len < sizeof(buf) - 3) {
 			evutil_snprintf(buf + len, sizeof(buf) - len, ": %s", errstr);
 		}
 	}
 
+    /**
+     * 把缓存区的数据作为一条日志记录，调用Libevent的日志函数
+     **/ 
 	event_log(severity, buf);
 }
 
@@ -195,9 +213,16 @@ event_set_log_callback(event_log_cb cb)
 	log_fn = cb;
 }
 
+/**
+ * 从event_log函数中可以看到，当函数指针log_fn不用NULL时，就调用log_fn指向的函数，否则就直接向stderr输出日志信息。
+ * 设置自己的日志回调函数后，如果想恢复Libevent默认的日志回调函数，只需再次调用event_set_log_callback函数，参数设置为NULL即可。
+ **/
 static void
 event_log(int severity, const char *msg)
 {
+    /**
+     * 调用用户的回调函数
+     **/ 
 	if (log_fn)
 		log_fn(severity, msg);
 	else {
@@ -219,6 +244,10 @@ event_log(int severity, const char *msg)
 			severity_str = "???";
 			break;
 		}
+
+        /**
+         * 输出到标准错误终端中
+         **/ 
 		(void)fprintf(stderr, "[%s] %s\n", severity_str, msg);
 	}
 }
