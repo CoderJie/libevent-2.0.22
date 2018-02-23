@@ -84,6 +84,7 @@
 
 /*
  * Singly-linked List definitions.
+ * 单向链表
  */
 #define SLIST_HEAD(name, type)						\
 struct name {								\
@@ -108,6 +109,9 @@ struct {								\
 #define	SLIST_EMPTY(head)	(SLIST_FIRST(head) == SLIST_END(head))
 #define	SLIST_NEXT(elm, field)	((elm)->field.sle_next)
 
+/**
+ * 遍历单向链表
+ **/ 
 #define	SLIST_FOREACH(var, head, field)					\
 	for((var) = SLIST_FIRST(head);					\
 	    (var) != SLIST_END(head);					\
@@ -115,16 +119,25 @@ struct {								\
 
 /*
  * Singly-linked List functions.
+ * 链表初始化，一开始为空，那么就是要头和尾相同即可
  */
 #define	SLIST_INIT(head) {						\
 	SLIST_FIRST(head) = SLIST_END(head);				\
 }
 
+/**
+ * 尾插法
+ * elm是待插入的节点
+ **/ 
 #define	SLIST_INSERT_AFTER(slistelm, elm, field) do {			\
 	(elm)->field.sle_next = (slistelm)->field.sle_next;		\
 	(slistelm)->field.sle_next = (elm);				\
 } while (0)
 
+/**
+ * 头插法
+ * elm是待插入的节点
+ **/ 
 #define	SLIST_INSERT_HEAD(head, elm, field) do {			\
 	(elm)->field.sle_next = (head)->slh_first;			\
 	(head)->slh_first = (elm);					\
@@ -134,8 +147,12 @@ struct {								\
 	(head)->slh_first = (head)->slh_first->field.sle_next;		\
 } while (0)
 
+
+
 /*
  * List definitions.
+ * 双向链表
+ * 宏LIST_ENTRY多了一个用于表示前一个元素le_next的地址（解引用（*le_prev）之后就是本元素的地址）
  */
 #define LIST_HEAD(name, type)						\
 struct name {								\
@@ -145,6 +162,10 @@ struct name {								\
 #define LIST_HEAD_INITIALIZER(head)					\
 	{ NULL }
 
+/**
+ * 这是和单向链表的主要区别
+ * 这个**le_prev的含义就是某个元素前一个元素的le_next地址，那么解引用之后就是该元素本身
+ **/ 
 #define LIST_ENTRY(type)						\
 struct {								\
 	struct type *le_next;	/* next element */			\
@@ -159,6 +180,9 @@ struct {								\
 #define	LIST_EMPTY(head)		(LIST_FIRST(head) == LIST_END(head))
 #define	LIST_NEXT(elm, field)		((elm)->field.le_next)
 
+/**
+ * 遍历双向链表
+ **/ 
 #define LIST_FOREACH(var, head, field)					\
 	for((var) = LIST_FIRST(head);					\
 	    (var)!= LIST_END(head);					\
@@ -166,54 +190,132 @@ struct {								\
 
 /*
  * List functions.
+ * 链表初始化，一开始为空，那么就是要头和尾相同即可
  */
 #define	LIST_INIT(head) do {						\
 	LIST_FIRST(head) = LIST_END(head);				\
 } while (0)
 
+/**
+ * 尾插法
+ * elm是待插入的节点
+ **/ 
 #define LIST_INSERT_AFTER(listelm, elm, field) do {			\
+    /**
+     * 让elm的next指针指向listelm的next指针所指元素（也就是listelm的下一个节点）
+     **/ 
 	if (((elm)->field.le_next = (listelm)->field.le_next) != NULL)	\
-		(listelm)->field.le_next->field.le_prev =		\
+        /**
+         * 让listelm的下一个节点的prev指针指向elm的next指针
+         **/ 
+        (listelm)->field.le_next->field.le_prev =		\
 		    &(elm)->field.le_next;				\
+    /**
+     * 让listelm的next指针指向elm所指对象
+     **/ 
 	(listelm)->field.le_next = (elm);				\
+    /**
+     * 让elm的prev指针指向listelm的next指针
+     **/
 	(elm)->field.le_prev = &(listelm)->field.le_next;		\
 } while (0)
 
+/**
+ * 头插法
+ * elm是待插入的节点
+ **/ 
 #define	LIST_INSERT_BEFORE(listelm, elm, field) do {			\
+    /**
+     * 让elm的prev指针指向listelm的prev指针所指对象
+     **/ 
 	(elm)->field.le_prev = (listelm)->field.le_prev;		\
+    /**
+     * 让elm的next指针指向listelm指针所指对象
+     **/ 
 	(elm)->field.le_next = (listelm);				\
-	*(listelm)->field.le_prev = (elm);				\
-	(listelm)->field.le_prev = &(elm)->field.le_next;		\
+	/**
+     * 让listelm的上一个节点的next指针指向elm所指对象   
+     * *(listelm)->field.le_prev结构获取listelm上一个节点的next指针
+     **/ 
+    *(listelm)->field.le_prev = (elm);				\
+	/**
+     * 让listelm指针的prev指针指向elm的next指针
+     **/ 
+    (listelm)->field.le_prev = &(elm)->field.le_next;		\
 } while (0)
 
+/**
+ * 头插法
+ * elm是待插入的节点
+ **/ 
 #define LIST_INSERT_HEAD(head, elm, field) do {				\
+    /**
+     * 让elm的next指针指向head的lh_first所指元素，也就是第一个元素
+     **/ 
 	if (((elm)->field.le_next = (head)->lh_first) != NULL)		\
+        /**
+         * 让第一个元素的prev指针指向elm的next指针
+         **/ 
 		(head)->lh_first->field.le_prev = &(elm)->field.le_next;\
-	(head)->lh_first = (elm);					\
+    /**
+     * 让head的lh_first指针指向elm所指元素
+     **/ 
+	(head)->lh_first = (elm);			\
+    /**
+     * 让elm的prev指向head的lh_first指针
+     **/
 	(elm)->field.le_prev = &(head)->lh_first;			\
 } while (0)
 
+/**
+ * 删除元素
+ **/ 
 #define LIST_REMOVE(elm, field) do {					\
+    /**
+     * 让elm下一个元素的prev指针指向elm的prev指针所指元素（让elm的下一个元素的prev指针指向elm的上一个元素的next指针）
+     **/ 
 	if ((elm)->field.le_next != NULL)				\
 		(elm)->field.le_next->field.le_prev =			\
 		    (elm)->field.le_prev;				\
+    /**
+     * 让elm的上一个元素的next指针指向elm的next指针所指元素
+     **/ 
 	*(elm)->field.le_prev = (elm)->field.le_next;			\
 } while (0)
 
+/**
+ * 用elm2所指元素替换elm所指元素
+ **/ 
 #define LIST_REPLACE(elm, elm2, field) do {				\
+    /**
+     * 让elm2的next指针指向elm的next指针所指元素（即elm的下一个元素）
+     **/ 
 	if (((elm2)->field.le_next = (elm)->field.le_next) != NULL)	\
+        /**
+         * 让elm2的下一个元素的prev指针指向elm2的next指针
+         **/ 
 		(elm2)->field.le_next->field.le_prev =			\
 		    &(elm2)->field.le_next;				\
+    /**
+     * 让elm2的prev指针指向elm的prev指针所指元素（即elm的上一个元素的next指针）
+     **/ 
 	(elm2)->field.le_prev = (elm)->field.le_prev;			\
+    /**
+     * 让elm2的上一个节点的next指针指向elm2所指元素（ *(elm2)->field.le_prev  表示elm2的上一个元素的next指针）
+     **/ 
 	*(elm2)->field.le_prev = (elm2);				\
 } while (0)
 
 /*
  * Simple queue definitions.
+ * 单向队列
  */
 #define SIMPLEQ_HEAD(name, type)					\
 struct name {								\
 	struct type *sqh_first;	/* first element */			\
+    /**
+     * 指向队列中最后一个元素的下一个地址
+     **/ 
 	struct type **sqh_last;	/* addr of last next element */		\
 }
 
@@ -246,15 +348,33 @@ struct {								\
 	(head)->sqh_last = &(head)->sqh_first;				\
 } while (0)
 
+/**
+ * 插入队头
+ **/ 
 #define SIMPLEQ_INSERT_HEAD(head, elm, field) do {			\
+    /**
+     * 如果head为空，还需要再更改(head)->sqh_last
+     * 前面说过sqh_last是指向队列中最后一个元素的下一个地址
+     **/ 
 	if (((elm)->field.sqe_next = (head)->sqh_first) == NULL)	\
 		(head)->sqh_last = &(elm)->field.sqe_next;		\
 	(head)->sqh_first = (elm);					\
 } while (0)
 
+/**
+ * 插入队尾
+ **/ 
 #define SIMPLEQ_INSERT_TAIL(head, elm, field) do {			\
 	(elm)->field.sqe_next = NULL;					\
+    /**
+     * 让最后一个元素的next指针指向elm所指元素
+     * *(head)->sqh_last可以访问到最后一个元素的next指针
+     * (head)->sqh_last可以得到最后一个元素的next指针的地址，
+     **/ 
 	*(head)->sqh_last = (elm);					\
+    /**
+     * 让头节点的last指针指向elm元素的next指针
+     **/ 
 	(head)->sqh_last = &(elm)->field.sqe_next;			\
 } while (0)
 
@@ -264,6 +384,9 @@ struct {								\
 	(listelm)->field.sqe_next = (elm);				\
 } while (0)
 
+/**
+ * 移除head后的第一个元素
+ **/ 
 #define SIMPLEQ_REMOVE_HEAD(head, elm, field) do {			\
 	if (((head)->sqh_first = (elm)->field.sqe_next) == NULL)	\
 		(head)->sqh_last = &(head)->sqh_first;			\
