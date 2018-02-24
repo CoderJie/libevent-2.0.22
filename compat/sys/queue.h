@@ -397,7 +397,13 @@ struct {								\
  */
 #define TAILQ_HEAD(name, type)						\
 struct name {								\
+    /**
+     * 指向队列的第一个元素
+     **/ 
 	struct type *tqh_first;	/* first element */			\
+    /**
+     * 指向最后一个元素中的tqe_next的地址
+     **/ 
 	struct type **tqh_last;	/* addr of last next element */		\
 }
 
